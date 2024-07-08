@@ -1,0 +1,65 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\Role;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
+ */
+class UserFactory extends Factory
+{
+    // what model it is linked with 
+    // the name should have Factory as suffix to autodiscover else we need to define a function that tells that this would be the factory 
+//\vendor\fakerphp\faker\src\Faker\Generator.php by looking at this we can see what we can generate from faker
+    protected $model = User::class;
+
+    /**
+     * The current password being used by the factory.
+     */
+    protected static ?string $password;
+
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'id' => $this->faker->uuid,
+            'email' => $this->faker->unique()->safeEmail,
+            'name' => $this->faker->name,
+            'password' => bcrypt('password'), // Example password; adjust as needed
+            'roleId' => Role::factory(),   // the user has a foreign key role id , so while generating a user it will also create a role and assign that role id to this user
+            'isActive' => true,
+            'activeTwoFactorAuthentication' => false,
+            'google2faSecret' => null,
+            'createdBy' => null,
+            'createdAt' => now(),
+            'updatedAt' => null,
+            'deletedAt' => null,
+        ];
+    }
+  
+/* Notes
+in database seeder we can do like  create a user for the role .. it is used for when there is a belong to relationship , also we can do inverse like if there is a post with many comment we can do   ->has(comment::factory()->count(3))
+  User::factory()->count(1)->for(Role::factory()->state([
+                'type' => 'customer',  // this state mean while creating a factory , for type col write this value
+            ]))->create();  
+as we are doing this for here and inside the UserFactry there is a col roleId=>Role::factory(), this key val will be replace with the role i am creating here with the state and that role with type customer will be assigned to that user
+*/
+    /**
+     * Indicate that the model's email address should be unverified.
+     */
+    public function unverified(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'email_verified_at' => null,
+        ]);
+    }
+}
